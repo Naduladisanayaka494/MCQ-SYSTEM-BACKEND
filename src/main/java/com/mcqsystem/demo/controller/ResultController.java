@@ -8,8 +8,10 @@ import java.util.Map;
 
 import org.apache.catalina.User;
 import org.aspectj.weaver.patterns.TypePatternQuestions.Question;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -74,4 +76,31 @@ public class ResultController {
         User user = (User) userRepository.findByEmail(principal.getName()).orElseThrow();
         return resultRepository.findByUserId(((Answer) user).getId());
     }
+
+
+@GetMapping("/{resultId}/answers")
+public ResponseEntity<?> getAnswersWithCorrectness(@PathVariable Long resultId, Principal principal) {
+    Result result = resultRepository.findById(resultId)
+            .orElseThrow(() -> new RuntimeException("Result not found"));
+
+    if (!result.getUser().getEmail().equals(principal.getName())) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Unauthorized");
+    }
+
+    List<Answer> answers = answerRepository.findAll().stream()
+            .filter(a -> a.getResult().getId().equals(resultId))
+            .toList();
+
+    List<Map<String, Object>> response = answers.stream().map(a -> Map.of(
+        "question", a.getQuestion().getQuestionText(),
+        "options", a.getQuestion().getOptions(),
+        "selectedOption", a.getSelectedOption(),
+        "correctOption", a.getQuestion().getCorrectOption(),
+        "isCorrect", a.isCorrect()
+    )).toList();
+
+    return ResponseEntity.ok(response);
+}
+
+    
 }
