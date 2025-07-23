@@ -30,8 +30,9 @@ public class AuthService {
         try {
             authManager.authenticate(
                     new UsernamePasswordAuthenticationToken(req.getEmail(), req.getPassword()));
-            String token = jwtUtil.generateToken(req.getEmail());
-            return ResponseEntity.ok(Map.of("token", token));
+            User user = userRepository.findByEmail(req.getEmail()).orElseThrow();
+            String token = jwtUtil.generateToken(user);
+            return ResponseEntity.ok(Map.of("token", token, "role", user.getRole()));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid credentials");
         }
@@ -47,6 +48,7 @@ public class AuthService {
         user.setEmail(req.getEmail());
         user.setName(req.getName());
         user.setPassword(passwordEncoder.encode(req.getPassword()));
+        user.setRole(req.getRole()); 
         userRepository.save(user);
 
         return ResponseEntity.ok("User registered");
