@@ -35,6 +35,45 @@ public class ResultService {
     private final UserRepository userRepository;
     private final ExamRepository examRepository;
 
+    // public ResponseEntity<?> submitExam(SubmitAnswerRequest request, Principal principal) {
+    //     User user = userRepository.findByEmail(principal.getName())
+    //             .orElseThrow(() -> new RuntimeException("User not found"));
+
+    //     Exam exam = examRepository.findById(request.getExamId())
+    //             .orElseThrow(() -> new RuntimeException("Exam not found"));
+
+    //     Result result = new Result();
+    //     result.setUser(user);
+    //     result.setExam(exam);
+    //     result.setTimestamp(LocalDateTime.now());
+
+    //     int score = 0;
+    //     List<Answer> answerList = new ArrayList<>();
+
+    //     for (AnswerDTO a : request.getAnswers()) {
+    //         Question question = questionRepository.findById(a.getQuestionId())
+    //                 .orElseThrow(() -> new RuntimeException("Question not found"));
+
+    //         boolean isCorrect = question.getCorrectOption() == a.getSelectedOption();
+    //         if (isCorrect)
+    //             score++;
+
+    //         Answer ans = new Answer();
+    //         ans.setQuestion(question);
+    //         ans.setSelectedOption(a.getSelectedOption());
+    //         ans.setCorrect(isCorrect);
+    //         ans.setResult(result);
+
+    //         answerList.add(ans);
+    //     }
+
+    //     result.setScore(score);
+    //     resultRepository.save(result);
+    //     answerRepository.saveAll(answerList);
+
+    //     return ResponseEntity.ok(Map.of("score", score, "total", request.getAnswers().size()));
+    // }
+
     public ResponseEntity<?> submitExam(SubmitAnswerRequest request, Principal principal) {
         User user = userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -71,9 +110,16 @@ public class ResultService {
         resultRepository.save(result);
         answerRepository.saveAll(answerList);
 
-        return ResponseEntity.ok(Map.of("score", score, "total", request.getAnswers().size()));
+        // Return score, total, and resultId
+        return ResponseEntity.ok(Map.of(
+                "score", score,
+                "total", request.getAnswers().size(),
+                "resultId", result.getId() // <-- return result ID here
+        ));
     }
-
+    
+    
+    
     public List<Result> getMyResults(Principal principal) {
         User user = userRepository.findByEmail(principal.getName())
                 .orElseThrow(() -> new RuntimeException("User not found"));
